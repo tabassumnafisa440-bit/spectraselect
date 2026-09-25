@@ -1,0 +1,37 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Logs
+*.log
+logs/
+
+# Local databases / database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Database backups
+*.sql
+*.sql.gz
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build / coverage
+dist/
+build/
+coverage/

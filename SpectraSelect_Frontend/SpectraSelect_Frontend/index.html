@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpectraSelect — RF Engineering Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="vendor/chart.umd.js"></script>
+<script src="vendor/leaflet/leaflet.js"></script>
+</head>
+<body>
+<div id="loginOverlay"><div class="login-card">
+  <div class="brand-mark"><span></span><span></span><span></span><span></span></div>
+  <h2>SpectraSelect Auth</h2><p>Enter your access key or student credentials to unlock the RF Engineering Engine.</p>
+  <input type="text" id="loginUser" placeholder="Username / Student ID" value="ETE-Engineer">
+  <input type="password" id="loginPass" placeholder="Access Key" value="1234">
+  <div class="login-err" id="loginErr">Invalid credentials. Please try again.</div>
+  <button class="btn btn-primary full" onclick="handleLogin()">▸ Authenticate & Access Suite</button>
+</div></div>
+
+<nav><div class="wrap nav-wrap">
+  <div class="brand"><div class="brand-mark"><span></span><span></span><span></span><span></span></div>SpectraSelect</div>
+  <ul><li><a href="#tool">Engine</a></li><li><a href="#mapSection">Coverage Map</a></li><li><a href="#calcSection">Calculators</a></li><li><a href="#radarSection">Radar</a></li><li><a href="#compare">Table</a></li><li><a href="#charts">Charts</a></li></ul>
+  <div class="nav-right"><span class="user-badge" id="userBadge">🔒 Guest</span><button class="btn-logout" id="logoutBtn" onclick="handleLogout()">Logout</button></div>
+</div></nav>
+
+<div id="libWarning" class="lib-warning"></div>
+
+<div class="ctx-bar" id="ctxBar"><div class="wrap ctx-inner">
+  <span class="ctx-label">Active result</span>
+  <span id="ctxMain">Awaiting input…</span>
+  <span class="ctx-top3" id="ctxTop3"></span>
+  <a href="#tool">Change inputs ↑</a>
+</div></div>
+
+<header class="hero"><div class="wrap hero-inner">
+  <div class="eyebrow">Advanced Wireless Recommendation Engine v2.0</div>
+  <h1>Intelligent RF Standard Selection & <em>Coverage Simulation</em> Suite.</h1>
+  <p>Evaluate Wi-Fi, Bluetooth, ZigBee, LoRaWAN, NB-IoT, LTE, and 5G using weighted decision scoring, theoretical path-loss models, battery estimation, and interactive map simulation.</p>
+  <div class="hero-cta"><a href="#tool" class="btn btn-primary">▸ Launch Recommendation Engine</a><a href="#mapSection" class="btn btn-ghost">▸ Open Coverage Map</a></div>
+</div></header>
+
+<section id="tool"><div class="wrap"><div class="sec-head"><div class="tag">01 — Intelligent Recommendation Engine</div><h2>Deployment Parameters & Custom Weighting</h2><p>Enter your requirements once. The map, calculators, radar, table and graphs below all update automatically from the result. Dropdowns = your requirements (standards that cannot meet them lose score); sliders = how much each criterion matters.</p></div>
+<div class="tool-grid"><div class="panel">
+  <div class="field-row">
+    <div class="field"><label>Communication Range</label><select id="in_range"><option value="short">Short (&lt; 10 m)</option><option value="medium" selected>Medium (10–100 m)</option><option value="long">Long (100 m – 1 km)</option><option value="verylong">Very long (&gt; 1 km)</option></select></div>
+    <div class="field"><label>Required Data Rate</label><select id="in_dataRate"><option value="low">Low (&lt; 250 kbps)</option><option value="medium" selected>Medium (250 kbps – 10 Mbps)</option><option value="high">High (10 – 500 Mbps)</option><option value="veryhigh">Very high (&gt; 500 Mbps)</option></select></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Deployment Environment</label><select id="in_environment"><option value="indoor" selected>Indoor</option><option value="outdoor">Outdoor</option><option value="both">Mixed Indoor/Outdoor</option></select></div>
+    <div class="field"><label>Power Source</label><select id="in_power"><option value="low" selected>Battery (Multi-year target)</option><option value="medium">Rechargeable Battery</option><option value="notconstraint">Mains Powered</option></select></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Budget Level</label><select id="in_budget"><option value="low" selected>Low (Academic / Hobby)</option><option value="medium">Medium (Commercial IoT)</option><option value="high">High (Enterprise / Telco)</option></select></div>
+    <div class="field"><label>Latency Target</label><select id="in_latency"><option value="verylow">Ultra-low (&lt; 10 ms)</option><option value="low" selected>Low (&lt; 100 ms)</option><option value="medium">Medium (&lt; 1 s)</option><option value="high">High (Delay Tolerant)</option></select></div>
+  </div>
+  <div class="weight-box"><div class="weight-title"><span>Priority Weight Adjustment (%)</span><span id="weightTotalDisplay">Total: 100%</span></div>
+    <div class="field"><label>Range Weight <span class="val" id="w_range_val">25%</span></label><input type="range" id="w_range" min="0" max="50" value="25" oninput="updateWeights()"></div>
+    <div class="field"><label>Data Rate Weight <span class="val" id="w_dataRate_val">20%</span></label><input type="range" id="w_dataRate" min="0" max="50" value="20" oninput="updateWeights()"></div>
+    <div class="field"><label>Power Efficiency Weight <span class="val" id="w_power_val">25%</span></label><input type="range" id="w_power" min="0" max="50" value="25" oninput="updateWeights()"></div>
+    <div class="field"><label>Budget / Cost Weight <span class="val" id="w_budget_val">15%</span></label><input type="range" id="w_budget" min="0" max="50" value="15" oninput="updateWeights()"></div>
+    <div class="field"><label>Latency Weight <span class="val" id="w_latency_val">15%</span></label><input type="range" id="w_latency" min="0" max="50" value="15" oninput="updateWeights()"></div>
+  </div>
+  <button class="btn btn-primary full" onclick="runRecommendation()">▸ Compute Recommendation Matrix</button>
+</div><div class="result-panel" id="resultPanel"><div class="result-empty">Awaiting input requirements.<br>Adjust parameters and execute recommendation.</div></div></div></div></section>
+
+<section id="mapSection"><div class="wrap"><div class="sec-head"><div class="tag">02 — Coverage Map Simulation</div><h2>Interactive Wireless Gateway Radius</h2><p>Shows the recommended standard by default. Drag the gateway, or pick another standard to compare its radius.</p><div class="ctx-note" data-ctx></div></div>
+<div class="map-controls"><label class="mono">Gateway Radius:</label><select id="mapStdSelect" onchange="updateMapCircle()"><option>Wi-Fi</option><option>Bluetooth</option><option>ZigBee</option><option selected>LoRaWAN</option><option>NB-IoT</option><option>LTE</option><option>5G</option></select><button class="btn btn-ghost" onclick="resetMapLocation()">Reset Gateway</button></div><div class="map-info" id="mapInfo"></div><div id="map"></div></div></section>
+
+<section id="calcSection"><div class="wrap"><div class="sec-head"><div class="tag">03 — Engineering Calculators</div><h2>RF Path Loss & Battery Life Estimator</h2><p>Pre-filled from your recommendation (frequency, max range, typical currents). Switch between the top picks or edit any value — the calculation steps and graphs update live.</p><div class="ctx-note" data-ctx></div></div>
+<div class="compare-selector calc-selector" id="calcSelectors"></div>
+<div class="calc-grid">
+
+<div class="calc-card">
+  <h3>📡 Free Space Path Loss</h3>
+  <p class="small">FSPL = 20 log₁₀(d) + 20 log₁₀(f) − 27.55 &nbsp;(d in meters, f in MHz)</p>
+  <div class="field-row">
+    <div class="field"><label>Distance (meters)</label><input type="number" id="fsplDist" min="0" step="any" oninput="calculateFSPL()"></div>
+    <div class="field"><label>Frequency (MHz)</label><input type="number" id="fsplFreq" min="0" step="any" oninput="calculateFSPL()"></div>
+  </div>
+  <div class="quick-chips" id="fsplQuick"></div>
+  <div class="calc-steps-label mono">Calculation</div>
+  <pre class="calc-steps" id="fsplSteps"></pre>
+  <div class="calc-result">Estimated Path Loss:<span class="num" id="fsplResult"></span><span class="calc-note" id="fsplNote"></span></div>
+  <div class="calc-chart"><canvas id="fsplChart"></canvas></div>
+  <div class="chart-caption">Blue line = path loss for the frequency above. Dots = each top-3 standard at its own max range and typical frequency, so they can sit off the line. ✕ = your distance.</div>
+</div>
+
+<div class="calc-card">
+  <h3>🔋 Battery Life & Duty Cycle</h3>
+  <p class="small">Average current from TX duty cycle and sleep current.</p>
+  <div class="field-row">
+    <div class="field"><label>Battery Capacity (mAh)</label><input type="number" id="batCap" value="2400" min="0" step="any" oninput="calculateBattery()"></div>
+    <div class="field"><label>Tx Current (mA)</label><input type="number" id="batTx" min="0" step="any" oninput="calculateBattery()"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Sleep Current (mA)</label><input type="number" id="batSleep" min="0" step="any" oninput="calculateBattery()"></div>
+    <div class="field"><label>Tx Duty Cycle (%)</label><input type="number" id="batDuty" min="0" max="100" step="any" oninput="calculateBattery()"></div>
+  </div>
+  <div class="quick-chips" id="batQuick"></div>
+  <div class="calc-steps-label mono">Calculation</div>
+  <pre class="calc-steps" id="batSteps"></pre>
+  <div class="calc-result">Estimated Operating Life:<span class="num" id="batResult"></span><span class="calc-note" id="batNote"></span></div>
+  <div class="calc-chart"><canvas id="batteryChart"></canvas></div>
+  <div class="chart-caption">Battery life falls as the TX duty cycle rises. ✕ = your duty cycle.</div>
+</div>
+
+</div>
+
+<div class="calc-card calc-compare">
+  <h3>⚖️ Calculator Comparison — Top 3 Recommended</h3>
+  <p class="small">Each standard at its own max range and typical carrier frequency; battery life uses your capacity (<strong id="calcCompareCap">2,400 mAh</strong>) with that standard's typical currents.</p>
+  <div class="table-scroll"><table class="mini-table"><thead><tr><th>Standard</th><th>Match</th><th>Max Range</th><th>Frequency</th><th>FSPL @ Max Range</th><th>Avg Current</th><th>Battery Life</th></tr></thead><tbody id="calcCompareBody"></tbody></table></div>
+</div>
+</div></section>
+
+<section id="radarSection"><div class="wrap"><div class="sec-head"><div class="tag">04 — Multi-Standard Radar Overlay</div><h2>Compare Multi-Attribute Trade-offs</h2><p>Starts with your top 3 recommended standards. Swap any of them to compare against other options.</p><div class="ctx-note" data-ctx></div></div><div class="compare-selector" id="radarSelectors"></div><div class="panel chart-panel"><canvas id="multiRadarChart"></canvas></div></div></section>
+
+<section id="compare"><div class="wrap"><div class="sec-head"><div class="tag">05 — Standard Comparison & Export</div><h2>Comprehensive Specification Matrix</h2><p>All standards listed in recommendation order. Search, export CSV, or print a report.</p><div class="ctx-note" data-ctx></div></div>
+<div class="toolbar"><input type="text" id="filterSearch" placeholder="Search standard (e.g., LoRa, 5G)..." oninput="renderTable()"><button class="btn btn-ghost" onclick="exportTableCSV()">Export CSV</button><button class="btn btn-primary" onclick="window.print()">Print PDF Report</button></div>
+<div class="table-scroll"><table><thead><tr><th>Rank</th><th>Standard</th><th>Match</th><th>Reqs Met</th><th>Frequency</th><th>Max Range</th><th>Data Rate</th><th>Power</th><th>Latency</th><th>Est. Cost</th></tr></thead><tbody id="tableBody"></tbody></table></div></div></section>
+
+<section id="charts"><div class="wrap"><div class="sec-head"><div class="tag">06 — Analytics Charts</div><h2>Match, Range & Throughput Positioning</h2><p>The recommended standard is highlighted in every graph, with its range shown next to it.</p><div class="ctx-note" data-ctx></div></div>
+<div class="chart-legend"><span><i style="background:#16a34a"></i>Recommended</span><span><i style="background:#2563eb"></i>Other top 3</span><span><i style="background:#cbd5e1"></i>Remaining standards</span></div>
+<div class="chart-grid">
+  <div class="chart-box"><h4>Weighted Match Score (%)</h4><div class="chart-holder"><canvas id="matchChart"></canvas></div></div>
+  <div class="chart-box"><h4>Max Range (Log Scale)</h4><div class="chart-holder"><canvas id="rangeChart"></canvas></div></div>
+  <div class="chart-box chart-wide"><h4>Data Rate vs Range Scatter Plot</h4><div class="chart-holder chart-holder-tall"><canvas id="scatterChart"></canvas></div></div>
+</div></div></section>
+<footer><div class="wrap">SPECTRASELECT V2.0 · ADVANCED WIRELESS STANDARD RECOMMENDATION & RF SUITE · ETE ENGINEERING</div></footer>
+<script src="js/app.js"></script>
+</body></html>
