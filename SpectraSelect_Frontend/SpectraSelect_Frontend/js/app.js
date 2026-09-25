@@ -132,7 +132,7 @@ const COLOR_OTHER = "#cbd5e1";    /* rest    */
 
 /* Backend (Node + MySQL). When it is running, the Compute button uses it.
    When it is not reachable, the website calculates locally with the same formula. */
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://spectraselect-backend.onrender.com";
 const USE_BACKEND = true;
 const BACKEND_TIMEOUT_MS = 2500;
 
